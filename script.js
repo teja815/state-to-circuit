@@ -602,7 +602,7 @@ function renderCircuit(numQubits, gates) {
     const isDark = body.classList.contains('dark-mode');
     const strokeColor = isDark ? '#24496dff' : '#000000';
     const textColor = isDark ? '#234363ff' : '#000000';
-    const gateColor = isDark ? '#d0d9e9ff' : '#3c745bff';
+    const gateColor = isDark ? '#d0d9e9ff' : '#e4f7eeff';
 
     // Draw quantum wires
     for (let q = 0; q < numQubits; q++) {
