@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Quantum State to Column Vector</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #155eab;
+      --bg-light: #f8fafc;
+      --bg-dark: #0f172a;
+      --card-light: rgba(255, 255, 255, 0.85);
+      --card-dark: rgba(30, 41, 59, 0.85);
+      --text-light: #155eab;
+      --text-dark: #f1f5f9;
+      --border-light: #b6d0fa;
+      --border-dark: #334155;
+      --glass-blur: blur(12px);
+    }
+
+    .light-mode {
+      --bg-color: linear-gradient(135deg, #e0f2fe 0%, #f8fafc 100%);
+      --card-color: var(--card-light);
+      --text-color: var(--text-light);
+      --border-color: var(--border-light);
+    }
+
+    .dark-mode {
+      --bg-color: linear-gradient(135deg, #8095f5 0%, #3b1c5c 100%);
+      --card-color: rgba(36, 41, 71, 0.92);
+      --text-color: #e0e7ef;
+      --border-color: #4f46e5;
+    }
+
+    * {
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: var(--card-color);
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.08), 0 1.5px 8px rgba(21, 94, 171, 0.08);
+      border: 1.5px solid var(--border-color);
+      width: 90%;
+      max-width: 600px;
+      margin: 2rem auto;
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.10);
+      letter-spacing: 0.5px;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(90deg, #155eab 60%, #2563eb 100%);
+      transform: translateY(-1px) scale(1.03);
+      box-shadow: 0 4px 16px rgba(21, 94, 171, 0.15);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: var(--border-color);
+    }
+
+    .form-row {
+      /* Removed flex layout for stacked input fields */
+      display: block;
+      margin-bottom: 1rem;
+    }
+
+    .form-input {
+      flex: 1 1 0;
+      min-width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      background: var(--card-color);
+      color: var(--text-color);
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .card {
+      background: var(--card-color);
+      border: 1.5px solid var(--border-color);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      box-shadow: 0 2px 12px rgba(37, 99, 235, 0.07);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+    }
+
+    .mode-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: var(--card-color);
+      border: 1px solid var(--border-color);
+      border-radius: 2rem;
+      padding: 0.5rem;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    .slide-up {
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    pre,
+    .backend-output {
+      background: var(--bg-color);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid var(--border-color);
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.9rem;
+    }
+
+    .error {
+      color: #ef4444;
+      font-weight: 600;
+      padding: 0.75rem;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 0.5rem;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    h2,
+    h3 {
+      margin-top: 0;
+      color: #155eab;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+    }
+
+    label {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: block;
+      color: #155eab;
+      letter-spacing: 0.2px;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+        margin: 1rem auto;
+      }
+
+      .mode-toggle {
+        top: 0.5rem;
+        right: 0.5rem;
+      }
+    }
+  </style>
+</head>
+
+<body class="light-mode">
+
+  <!-- Canvas particle background (QSV style) -->
+  <canvas id="qsv-bg" style="position:fixed;inset:0;pointer-events:none;opacity:0.45;z-index:0;"
+    aria-hidden="true"></canvas>
+
+
+  <!-- Dark/Light Mode Toggle Button (responsive, overlays hero) -->
+  <button class="mode-toggle" id="modeToggle" aria-label="Toggle dark mode"
+    style="position:fixed;top:1rem;right:1rem;z-index:1001;">
+    <svg id="sunIcon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="12" cy="12" r="5" fill="#facc15" />
+      <g stroke="#facc15" stroke-width="2">
+        <line x1="12" y1="2" x2="12" y2="5" />
+        <line x1="12" y1="19" x2="12" y2="22" />
+        <line x1="2" y1="12" x2="5" y2="12" />
+        <line x1="19" y1="12" x2="22" y2="12" />
+        <line x1="4.22" y1="4.22" x2="6.34" y2="6.34" />
+        <line x1="17.66" y1="17.66" x2="19.78" y2="19.78" />
+        <line x1="4.22" y1="19.78" x2="6.34" y2="17.66" />
+        <line x1="17.66" y1="6.34" x2="19.78" y2="4.22" />
+      </g>
+    </svg>
+    <svg id="moonIcon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 1 0 9.79 9.79z" fill="#a5b4fc" />
+    </svg>
+  </button>
+
+  <!-- Modern Hero Section -->
+  <section class="hero-section"
+    style="position:relative; min-height:100vh; display:flex; align-items:center; justify-content:center; overflow:hidden; background:linear-gradient(135deg, #e0e7ff 0%, #a5b4fc 100%);">
+    <!-- Animated Gradient Background -->
+    <div
+      style="position:absolute; inset:0; z-index:0; background:linear-gradient(120deg, #a5b4fc 0%, #f0fdfa 100%); opacity:0.7;">
+    </div>
+    <!-- Content -->
+    <div style="position:relative; z-index:1; text-align:center; max-width:700px; width:100%; padding:2rem 1rem;">
+      <h1
+        style="font-size:3rem; font-weight:800; margin-bottom:1.5rem; background:linear-gradient(90deg, #6366f1 30%, #06b6d4 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; color:transparent;">
+        Quantum State to Circuit Visualizer</h1>
+      <p style="font-size:1.35rem; color:#334155; margin-bottom:2.5rem; font-weight:500;">A next-generation tool for
+        exploring quantum state vectors and their corresponding quantum circuits. Experience interactive visualizations
+        and modern UI design.</p>
+      <a href="#main-app"
+        style="display:inline-block; padding:1rem 2.5rem; font-size:1.15rem; font-weight:700; border-radius:2rem; background:linear-gradient(90deg, #6366f1 60%, #06b6d4 100%); color:#fff; box-shadow:0 4px 24px rgba(99,102,241,0.15); text-decoration:none; transition:transform 0.15s;">Get
+        Started</a>
+    </div>
+  </section>
+
+  <!-- Main App Section (hidden until user scrolls or clicks Get Started) -->
+  <div id="main-app" class="container fade-in" role="main" style="margin-top:3rem;">
+    <h2 class="text-center slide-up">Quantum State → Column Vector</h2>
+
+    <div class="card slide-up">
+      <label for="numQubits"><b>Number of Qubits (1–5):</b></label>
+      <input id="numQubits" type="number" placeholder="e.g. 2" min="1" max="5" class="form-input" />
+
+      <!-- Containers populated by script.js -->
+      <div id="basisStatesList" style="margin-top:0.75rem;color:#475569;font-size:0.95rem;"></div>
+      <div id="sampleWavefunctionsList"
+        style="margin-top:0.75rem;display:flex;flex-direction:column;gap:0.45rem;font-size:0.95rem;color:#0f172a;">
+      </div>
+
+      <label for="basisSelector"><b>Select Basis State:</b></label>
+      <select id="basisSelector" class="form-input">
+        <option value="">-- Select basis state --</option>
+      </select>
+
+      <label for="amplitudeInput"><b>Amplitude (+/- allowed):</b></label>
+      <input id="amplitudeInput" type="text" placeholder="e.g. 0.07 or -0.5" class="form-input" />
+
+      <button id="addTermBtn" class="btn-primary" style="margin-top:1rem;">Add Term</button>
+    </div>
+
+    <div class="card slide-up">
+      <label for="waveInput"><b>Wavefunction (Dirac notation):</b></label>
+      <input id="waveInput" type="text" placeholder="e.g. (0.7)|0> + (0.7)|1>" class="form-input" />
+
+      <button id="convertBtn" class="btn-primary" style="margin-top:1rem;">Convert</button>
+    </div>
+
+    <div class="card slide-up">
+      <h3>Column Vector:</h3>
+      <pre id="colVector" aria-live="polite"></pre>
+    </div>
+
+    <div id="errorMsg" class="error" aria-live="assertive" style="display: none;"></div>
+
+    <div class="card slide-up">
+      <h3>Backend Output:</h3>
+      <div class="backend-output" id="backendOutput">Waiting for backend...</div>
+    </div>
+
+    <div id="circuitContainer" class="card slide-up"></div>
+
+    <div id="qsphereDiv" class="card slide-up" style="width:92%; height:600px; overflow-x: auto;"></div>
+
+    <div class="card slide-up">
+      <canvas id="histogram"></canvas>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    // Simple particle background similar to QSV AnimatedBg
+    (function () {
+      const canvas = document.getElementById('qsv-bg');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+
+      function setSize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      setSize();
+
+      class P {
+        constructor() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.vx = (Math.random() - 0.5) * 0.6;
+          this.vy = (Math.random() - 0.5) * 0.6;
+          this.r = Math.random() * 2 + 0.8;
+          this.a = Math.random() * 0.5 + 0.2;
+        }
+        step() {
+          this.x += this.vx;
+          this.y += this.vy;
+          if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+          if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+        }
+      }
+
+      for (let i = 0; i < 70; i++) particles.push(new P());
+
+      function draw() {
+        if (!ctx) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p, idx) => {
+          p.step();
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(138,77,218,${p.a})`;
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+
+          for (let j = idx + 1; j < particles.length; j++) {
+            const o = particles[j];
+            const dx = p.x - o.x;
+            const dy = p.y - o.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 120) {
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(o.x, o.y);
+              ctx.strokeStyle = `rgba(138,77,218,${0.08 * (1 - dist / 120)})`;
+              ctx.lineWidth = 0.4;
+              ctx.stroke();
+            }
+          }
+        });
+        requestAnimationFrame(draw);
+      }
+      draw();
+
+      window.addEventListener('resize', setSize);
+    })();
+  </script>
+  <script>
+    // Responsive dark/light mode toggle logic
+    const modeToggle = document.getElementById('modeToggle');
+    const sunIcon = document.getElementById('sunIcon');
+    const moonIcon = document.getElementById('moonIcon');
+    function setMode(mode) {
+      document.body.className = mode + '-mode';
+      if (mode === 'dark') {
+        sunIcon.style.display = 'none';
+        moonIcon.style.display = '';
+      } else {
+        sunIcon.style.display = '';
+        moonIcon.style.display = 'none';
+      }
+      localStorage.setItem('theme', mode);
+    }
+    modeToggle.addEventListener('click', () => {
+      const isDark = document.body.classList.contains('dark-mode');
+      setMode(isDark ? 'light' : 'dark');
+    });
+    // On load, set mode from localStorage or system preference
+    (function () {
+      const saved = localStorage.getItem('theme');
+      if (saved) setMode(saved);
+      else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) setMode('dark');
+      else setMode('light');
+    })();
+  </script>
+
+
+</body>
+
+</html>
